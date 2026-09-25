@@ -1,0 +1,33 @@
+{
+  "name": "EpecuenNoEscape",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "EpecuenShared": {
+        "$path": "src/ReplicatedStorage"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "EpecuenServer": {
+        "$path": "src/ServerScriptService"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "EpecuenClient": {
+          "$path": "src/StarterPlayerScripts"
+        }
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "EpecuenGui": {
+        "$path": "src/StarterGui"
+      }
+    }
+  }
+}
