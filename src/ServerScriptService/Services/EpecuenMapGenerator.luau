@@ -438,12 +438,31 @@ function EpecuenMapGenerator.CreateRoad(
     roadPart.BottomSurface = Enum.SurfaceType.Smooth
     roadPart.Parent = parent
 
-    -- Invisible collision shoulder under the northern access road. This is a
-    -- safety foundation: if the visible road ever has a physics seam or the
-    -- player clips through its edge, the character remains above the town
-    -- terrain instead of falling into the void. It follows the same slope as
-    -- the road and is slightly wider, but remains completely invisible.
-    if name == "RD_NORTH_ACCESS" then
+    -- Priority 3: Continuous physical road embankment (Terraplén de soporte continuo).
+    -- Follows the exact road slope and orientation, anchoring into terrain (Y=0 dry town, Y=-8 lakebed)
+    -- to completely eliminate voids under elevated streets and paths.
+    local maxZ = math.max(startPos.Z, endPos.Z)
+    local targetGroundY = (maxZ >= 460) and -8.0 or 0.0
+    local roadBottomY = midpoint.Y - 0.6
+    local embHeight = math.max(2.0, (roadBottomY - targetGroundY) + 1.5)
+    local embCenterYOffset = -((embHeight * 0.5) + 0.6 - 0.1)
+
+    local embankment = Instance.new("Part")
+    embankment.Name = name .. "_Embankment"
+    embankment.Anchored = true
+    embankment.CanCollide = true
+    embankment.CastShadow = false
+    embankment.Size = Vector3.new(width + 4.0, embHeight, distance)
+    embankment.CFrame = roadPart.CFrame * CFrame.new(0, embCenterYOffset, 0)
+    embankment.Material = isPaved and Enum.Material.Concrete or Enum.Material.Ground
+    embankment.Color = isPaved and Color3.fromRGB(90, 88, 82) or Color3.fromRGB(115, 110, 95)
+    embankment.TopSurface = Enum.SurfaceType.Smooth
+    embankment.BottomSurface = Enum.SurfaceType.Smooth
+    embankment.Parent = parent
+
+    -- Priority 4: Invisible safety collision cushion under RD_ACCESO_NORTE / RD_NORTH_ACCESS.
+    -- Ensures the player never slips through seams at the barricade, spawn, or Avenida de Mayo.
+    if name == "RD_ACCESO_NORTE" or name == "RD_NORTH_ACCESS" then
         local safety = Instance.new("Part")
         safety.Name = "RD_NORTH_ACCESS_SafetyCollision"
         safety.Anchored = true
@@ -451,10 +470,79 @@ function EpecuenMapGenerator.CreateRoad(
         safety.CanTouch = false
         safety.CanQuery = true
         safety.Transparency = 1
-        safety.Size = Vector3.new(width + 8, 5, distance)
-        safety.CFrame = roadPart.CFrame * CFrame.new(0, -2.2, 0)
+        safety.Size = Vector3.new(width + 14, 8, distance + 16)
+        safety.CFrame = roadPart.CFrame * CFrame.new(0, -2.5, 0)
         safety.Material = Enum.Material.SmoothPlastic
         safety.Parent = parent
+    end
+
+    -- Priority 5: Specialized wide safety shoulders and branch junctions for peripheral roads
+    if name == "RD_CAMINO_MATADERO" then
+        -- Extra wide gravel shoulder for Matadero road so leaving the track is safe
+        local shoulder = Instance.new("Part")
+        shoulder.Name = "RD_CAMINO_MATADERO_Shoulder"
+        shoulder.Anchored = true
+        shoulder.CanCollide = true
+        shoulder.Size = Vector3.new(width + 10, embHeight, distance)
+        shoulder.CFrame = roadPart.CFrame * CFrame.new(0, embCenterYOffset - 0.2, 0)
+        shoulder.Material = Enum.Material.Ground
+        shoulder.Color = Color3.fromRGB(125, 120, 105)
+        shoulder.Parent = parent
+
+        -- Branch junction platform connecting Calle Victoria at (500, 3, 380)
+        local fork = Instance.new("Part")
+        fork.Name = "Junction_Victoria_Matadero"
+        fork.Anchored = true
+        fork.CanCollide = true
+        fork.Size = Vector3.new(34, 2.2, 34)
+        fork.CFrame = CFrame.new(500, 2.5, 380)
+        fork.Material = Enum.Material.Sand
+        fork.Color = Color3.fromRGB(145, 138, 120)
+        fork.Parent = parent
+    elseif name == "RD_RADIAL_WEST" then
+        -- Extra wide compacted earthen shoulder across radial parklands
+        local shoulder = Instance.new("Part")
+        shoulder.Name = "RD_RADIAL_WEST_Shoulder"
+        shoulder.Anchored = true
+        shoulder.CanCollide = true
+        shoulder.Size = Vector3.new(width + 12, embHeight, distance)
+        shoulder.CFrame = roadPart.CFrame * CFrame.new(0, embCenterYOffset - 0.2, 0)
+        shoulder.Material = Enum.Material.Ground
+        shoulder.Color = Color3.fromRGB(130, 125, 110)
+        shoulder.Parent = parent
+
+        -- Branch junction platform connecting Calle Cangallo and Talcahuano at (-320, 14, -250)
+        local fork = Instance.new("Part")
+        fork.Name = "Junction_Talcahuano_Radial"
+        fork.Anchored = true
+        fork.CanCollide = true
+        fork.Size = Vector3.new(36, 2.6, 36)
+        fork.CFrame = CFrame.new(-320, 13.5, -250)
+        fork.Material = Enum.Material.Sand
+        fork.Color = Color3.fromRGB(145, 138, 120)
+        fork.Parent = parent
+    elseif name == "RD_HUELLA_CEMENTERIO" then
+        -- Raised causeway embankment through the flooded saltern mudflats
+        local causeway = Instance.new("Part")
+        causeway.Name = "RD_HUELLA_CEMENTERIO_Causeway"
+        causeway.Anchored = true
+        causeway.CanCollide = true
+        causeway.Size = Vector3.new(width + 12, embHeight + 4, distance)
+        causeway.CFrame = roadPart.CFrame * CFrame.new(0, embCenterYOffset - 0.5, 0)
+        causeway.Material = Enum.Material.Sandstone
+        causeway.Color = Color3.fromRGB(105, 100, 90)
+        causeway.Parent = parent
+
+        -- Branch junction platform connecting Calle Victoria / Talcahuano at (-320, 4, 380)
+        local fork = Instance.new("Part")
+        fork.Name = "Junction_Talcahuano_Cementerio"
+        fork.Anchored = true
+        fork.CanCollide = true
+        fork.Size = Vector3.new(34, 2.2, 34)
+        fork.CFrame = CFrame.new(-320, 3.5, 380)
+        fork.Material = Enum.Material.Sand
+        fork.Color = Color3.fromRGB(140, 135, 120)
+        fork.Parent = parent
     end
 
     -- Side curbs for paved avenues
@@ -913,6 +1001,17 @@ function EpecuenMapGenerator.Generate(): GenerationStats
     )
     blocksCount += 1
 
+    -- Shoreline retaining escarpment (seals the 8-stud vertical drop between dry town and lakebed at Z=490)
+    local _shorelineBank = EpecuenMapGenerator.CreateBlock(
+        folderBlocks,
+        "ShorelineRetainingEscarpment",
+        CFrame.new(bounds.Center.X, -4, 490),
+        Vector3.new(bounds.TotalWidthStuds, 8, 16),
+        Enum.Material.Ground,
+        Color3.fromRGB(90, 88, 78) -- Moist saline silt embankment
+    )
+    blocksCount += 1
+
     -- Peripheral pampas perimeter walls (Boundary indicators)
     local halfW = bounds.TotalWidthStuds * 0.5
     local wallThickness = 12
@@ -952,90 +1051,256 @@ function EpecuenMapGenerator.Generate(): GenerationStats
     end
 
     -- ------------------------------------------------------------------------
-    -- 3. ROAD INTERSECTIONS
+    -- 3. ROAD INTERSECTIONS & CROSSING TRANSITIONS (Priority 2)
+    --    Calculates all 48 intersections between the 8 North-South streets and
+    --    6 East-West streets. Preserves distinct elevations, adds solid sub-foundations,
+    --    and creates smooth walkable transition ramps where heights differ.
     -- ------------------------------------------------------------------------
-    for _, inter in ipairs(EpecuenMapSpecification.Intersections) do
-        local pos = toVector3(inter.Position)
-        local interPart = Instance.new("Part")
-        interPart.Name = inter.Id
-        interPart.Anchored = true
-        interPart.CanCollide = true
-        interPart.Size = Vector3.new(44, 1.4, 44)
-        interPart.CFrame = CFrame.new(pos)
-        interPart.Material = inter.IsPavedCrossroad and Enum.Material.Asphalt or Enum.Material.Sand
-        interPart.Color = inter.IsPavedCrossroad and Color3.fromRGB(42, 45, 48) or Color3.fromRGB(155, 145, 130)
-        interPart.Parent = folderRoads
+    local function getStreetYAtZ(street: any, targetZ: number): number
+        local z1 = street.StartPos.Z
+        local z2 = street.EndPos.Z
+        local y1 = street.StartPos.Y
+        local y2 = street.EndPos.Y
+        if math.abs(z2 - z1) < 0.001 then return y1 end
+        local t = math.clamp((targetZ - z1) / (z2 - z1), 0.0, 1.0)
+        return y1 + t * (y2 - y1)
+    end
 
-        -- Intersection tactical indicator
-        EpecuenMapGenerator.CreateMarker(
-            folderMarkers,
-            "Marker_" .. inter.Id,
-            pos + Vector3.new(0, 1.2, 0),
-            inter.IsPavedCrossroad and Color3.fromRGB(180, 190, 205) or Color3.fromRGB(160, 150, 130),
-            inter.Id,
-            8
-        )
-        markersCount += 1
+    local function getStreetYAtX(street: any, targetX: number): number
+        local x1 = street.StartPos.X
+        local x2 = street.EndPos.X
+        local y1 = street.StartPos.Y
+        local y2 = street.EndPos.Y
+        if math.abs(x2 - x1) < 0.001 then return y1 end
+        local t = math.clamp((targetX - x1) / (x2 - x1), 0.0, 1.0)
+        return y1 + t * (y2 - y1)
+    end
+
+    -- Collect all orthogonal NS and EW streets from specification
+    local nsStreets = {}
+    local ewStreets = {}
+    for _, street in ipairs(EpecuenMapSpecification.Streets) do
+        local sId = street.Id
+        local isRegional = (sId == "RD_ACCESO_NORTE" or sId == "RD_NORTH_ACCESS" or sId == "RD_CAMINO_MATADERO" or sId == "RD_HUELLA_CEMENTERIO" or sId == "RD_RADIAL_WEST" or street.Orientation == "Diagonal")
+        if not isRegional then
+            if street.Orientation == "NorthSouth" or sId == "AV_DE_MAYO" or sId == "ST_MAYO" then
+                table.insert(nsStreets, street)
+            elseif street.Orientation == "EastWest" or street.Orientation == "CurvedCoast" then
+                table.insert(ewStreets, street)
+            end
+        end
+    end
+
+    for _, ns in ipairs(nsStreets) do
+        for _, ew in ipairs(ewStreets) do
+            local crossX = ns.StartPos.X
+            local crossZ = ew.StartPos.Z
+            local yNS = getStreetYAtZ(ns, crossZ)
+            local yEW = getStreetYAtX(ew, crossX)
+            local yLow = math.min(yNS, yEW)
+            local yHigh = math.max(yNS, yEW)
+            local yDiff = yHigh - yLow
+
+            local widthX = math.max(ns.WidthStuds, 28)
+            local widthZ = math.max(ew.WidthStuds, 28)
+            local isPavedCrossing = ns.IsPaved or ew.IsPaved
+
+            local crossingId = string.format("INT_%s_%s", ns.Id, ew.Id)
+
+            -- 1. Solid Sub-Intersection Foundation extending to base terrain
+            local targetGroundY = (crossZ >= 460) and -8.0 or 0.0
+            local fHeight = math.max(2.5, (yLow + 0.6) - targetGroundY + 1.5)
+            local fCenterY = (yLow + 0.6 + targetGroundY - 1.5) * 0.5
+
+            local subFoundation = Instance.new("Part")
+            subFoundation.Name = crossingId .. "_Foundation"
+            subFoundation.Anchored = true
+            subFoundation.CanCollide = true
+            subFoundation.Size = Vector3.new(widthX + 4.0, fHeight, widthZ + 4.0)
+            subFoundation.CFrame = CFrame.new(crossX, fCenterY, crossZ)
+            subFoundation.Material = isPavedCrossing and Enum.Material.Concrete or Enum.Material.Ground
+            subFoundation.Color = isPavedCrossing and Color3.fromRGB(80, 82, 85) or Color3.fromRGB(115, 110, 95)
+            subFoundation.TopSurface = Enum.SurfaceType.Smooth
+            subFoundation.BottomSurface = Enum.SurfaceType.Smooth
+            subFoundation.Parent = folderRoads
+
+            -- 2. Surface Intersection Plate
+            local interPart = Instance.new("Part")
+            interPart.Name = crossingId
+            interPart.Anchored = true
+            interPart.CanCollide = true
+            interPart.Size = Vector3.new(widthX, 1.2, widthZ)
+            interPart.CFrame = CFrame.new(crossX, yHigh, crossZ)
+            interPart.Material = isPavedCrossing and Enum.Material.Asphalt or Enum.Material.Sand
+            interPart.Color = isPavedCrossing and Color3.fromRGB(42, 45, 48) or Color3.fromRGB(150, 140, 125)
+            interPart.TopSurface = Enum.SurfaceType.Smooth
+            interPart.BottomSurface = Enum.SurfaceType.Smooth
+            interPart.Parent = folderRoads
+
+            -- 3. Walkable Transition Ramps when intersecting streets differ in elevation
+            if yDiff > 0.4 then
+                local rampLen = math.clamp(yDiff * 4.0, 12.0, 32.0)
+                if yNS < yEW then
+                    -- NS street is lower: create North and South approach ramps
+                    local rampHalfZ = widthZ * 0.5
+                    -- North ramp (approaching from -Z)
+                    local northStart = Vector3.new(crossX, yNS, crossZ - rampHalfZ - rampLen)
+                    local northEnd = Vector3.new(crossX, yEW, crossZ - rampHalfZ)
+                    local northMid = (northStart + northEnd) * 0.5
+                    local northDist = (northEnd - northStart).Magnitude
+                    local rampN = Instance.new("Part")
+                    rampN.Name = crossingId .. "_Ramp_North"
+                    rampN.Anchored = true
+                    rampN.CanCollide = true
+                    rampN.Size = Vector3.new(widthX, 1.2, northDist)
+                    rampN.CFrame = CFrame.lookAt(northMid, northEnd)
+                    rampN.Material = isPavedCrossing and Enum.Material.Asphalt or Enum.Material.Sand
+                    rampN.Color = isPavedCrossing and Color3.fromRGB(45, 48, 52) or Color3.fromRGB(150, 140, 125)
+                    rampN.TopSurface = Enum.SurfaceType.Smooth
+                    rampN.BottomSurface = Enum.SurfaceType.Smooth
+                    rampN.Parent = folderRoads
+
+                    -- South ramp (approaching from +Z)
+                    local southStart = Vector3.new(crossX, yNS, crossZ + rampHalfZ + rampLen)
+                    local southEnd = Vector3.new(crossX, yEW, crossZ + rampHalfZ)
+                    local southMid = (southStart + southEnd) * 0.5
+                    local southDist = (southEnd - southStart).Magnitude
+                    local rampS = Instance.new("Part")
+                    rampS.Name = crossingId .. "_Ramp_South"
+                    rampS.Anchored = true
+                    rampS.CanCollide = true
+                    rampS.Size = Vector3.new(widthX, 1.2, southDist)
+                    rampS.CFrame = CFrame.lookAt(southMid, southEnd)
+                    rampS.Material = isPavedCrossing and Enum.Material.Asphalt or Enum.Material.Sand
+                    rampS.Color = isPavedCrossing and Color3.fromRGB(45, 48, 52) or Color3.fromRGB(150, 140, 125)
+                    rampS.TopSurface = Enum.SurfaceType.Smooth
+                    rampS.BottomSurface = Enum.SurfaceType.Smooth
+                    rampS.Parent = folderRoads
+                else
+                    -- EW street is lower: create West and East approach ramps
+                    local rampHalfX = widthX * 0.5
+                    -- West ramp (approaching from -X)
+                    local westStart = Vector3.new(crossX - rampHalfX - rampLen, yEW, crossZ)
+                    local westEnd = Vector3.new(crossX - rampHalfX, yNS, crossZ)
+                    local westMid = (westStart + westEnd) * 0.5
+                    local westDist = (westEnd - westStart).Magnitude
+                    local rampW = Instance.new("Part")
+                    rampW.Name = crossingId .. "_Ramp_West"
+                    rampW.Anchored = true
+                    rampW.CanCollide = true
+                    rampW.Size = Vector3.new(widthZ, 1.2, westDist)
+                    rampW.CFrame = CFrame.lookAt(westMid, westEnd)
+                    rampW.Material = isPavedCrossing and Enum.Material.Asphalt or Enum.Material.Sand
+                    rampW.Color = isPavedCrossing and Color3.fromRGB(45, 48, 52) or Color3.fromRGB(150, 140, 125)
+                    rampW.TopSurface = Enum.SurfaceType.Smooth
+                    rampW.BottomSurface = Enum.SurfaceType.Smooth
+                    rampW.Parent = folderRoads
+
+                    -- East ramp (approaching from +X)
+                    local eastStart = Vector3.new(crossX + rampHalfX + rampLen, yEW, crossZ)
+                    local eastEnd = Vector3.new(crossX + rampHalfX, yNS, crossZ)
+                    local eastMid = (eastStart + eastEnd) * 0.5
+                    local eastDist = (eastEnd - eastStart).Magnitude
+                    local rampE = Instance.new("Part")
+                    rampE.Name = crossingId .. "_Ramp_East"
+                    rampE.Anchored = true
+                    rampE.CanCollide = true
+                    rampE.Size = Vector3.new(widthZ, 1.2, eastDist)
+                    rampE.CFrame = CFrame.lookAt(eastMid, eastEnd)
+                    rampE.Material = isPavedCrossing and Enum.Material.Asphalt or Enum.Material.Sand
+                    rampE.Color = isPavedCrossing and Color3.fromRGB(45, 48, 52) or Color3.fromRGB(150, 140, 125)
+                    rampE.TopSurface = Enum.SurfaceType.Smooth
+                    rampE.BottomSurface = Enum.SurfaceType.Smooth
+                    rampE.Parent = folderRoads
+                end
+            end
+
+            -- 4. Check for canonical specification marker
+            for _, canonInter in ipairs(EpecuenMapSpecification.Intersections) do
+                if (canonInter.StreetA == ns.Id and canonInter.StreetB == ew.Id)
+                    or (canonInter.StreetA == ew.Id and canonInter.StreetB == ns.Id)
+                    or (math.abs(canonInter.Position.X - crossX) < 15 and math.abs(canonInter.Position.Z - crossZ) < 15) then
+                    EpecuenMapGenerator.CreateMarker(
+                        folderMarkers,
+                        "Marker_" .. canonInter.Id,
+                        Vector3.new(crossX, yHigh + 1.2, crossZ),
+                        isPavedCrossing and Color3.fromRGB(180, 190, 205) or Color3.fromRGB(160, 150, 130),
+                        canonInter.Id,
+                        8
+                    )
+                    markersCount += 1
+                    break
+                end
+            end
+        end
     end
 
     -- ------------------------------------------------------------------------
-    -- 4. URBAN BLOCKS (Manzanas) AND PLAZA CENTRAL
+    -- 4. URBAN BLOCKS (Manzanas) AND PLAZA CENTRAL (Priority 1)
+    --    Calculates the exact street boundaries for each block column and row,
+    --    accounting for street widths. Eliminates the 4-stud gaps completely.
+    --    Builds solid masonry foundations extending down to ground level (Y=-1 or -8).
     -- ------------------------------------------------------------------------
-    -- 7 Columns (West to East) and 6 Rows (North to South)
     local colBounds = {
-        { MinX = -320, MaxX = -160, Name = "Col1_Talcahuano_Mayo" },
-        { MinX = -160, MaxX = 0,    Name = "Col2_Mayo_Cerrito" },
-        { MinX = 0,    MaxX = 150,  Name = "Col3_Cerrito_Pellegrini" },
-        { MinX = 150,  MaxX = 300,  Name = "Col4_Pellegrini_Suipacha" },
-        { MinX = 300,  MaxX = 450,  Name = "Col5_Suipacha_Esmeralda" },
-        { MinX = 450,  MaxX = 600,  Name = "Col6_Esmeralda_Maipu" },
-        { MinX = 600,  MaxX = 750,  Name = "Col7_Maipu_Florida" },
+        { MinX = -320, MaxX = -160, WestHW = 14, EastHW = 24, Name = "Col1_Talcahuano_Mayo" },
+        { MinX = -160, MaxX = 0,    WestHW = 24, EastHW = 14, Name = "Col2_Mayo_Cerrito" },
+        { MinX = 0,    MaxX = 150,  WestHW = 14, EastHW = 14, Name = "Col3_Cerrito_Pellegrini" },
+        { MinX = 150,  MaxX = 300,  WestHW = 14, EastHW = 14, Name = "Col4_Pellegrini_Suipacha" },
+        { MinX = 300,  MaxX = 450,  WestHW = 14, EastHW = 14, Name = "Col5_Suipacha_Esmeralda" },
+        { MinX = 450,  MaxX = 600,  WestHW = 14, EastHW = 14, Name = "Col6_Esmeralda_Maipu" },
+        { MinX = 600,  MaxX = 750,  WestHW = 14, EastHW = 14, Name = "Col7_Maipu_Florida" },
     }
 
     local rowBounds = {
-        { MinZ = -700, MaxZ = -450, Y = 16, Name = "Row1_North_Sarmiento" },
-        { MinZ = -450, MaxZ = -250, Y = 13, Name = "Row2_Sarmiento_Cangallo" },
-        { MinZ = -250, MaxZ = 0,    Y = 10, Name = "Row3_Cangallo_Mitre" },
-        { MinZ = 0,    MaxZ = 200,  Y = 7,  Name = "Row4_Mitre_Rivadavia" },
-        { MinZ = 200,  MaxZ = 380,  Y = 5,  Name = "Row5_Rivadavia_Victoria" },
-        { MinZ = 380,  MaxZ = 490,  Y = 2,  Name = "Row6_Victoria_Alsina" },
+        { MinZ = -700, MaxZ = -450, NorthHW = 0,  SouthHW = 18, Y = 16, Name = "Row1_North_Sarmiento" },
+        { MinZ = -450, MaxZ = -250, NorthHW = 18, SouthHW = 14, Y = 13, Name = "Row2_Sarmiento_Cangallo" },
+        { MinZ = -250, MaxZ = 0,    NorthHW = 14, SouthHW = 22, Y = 10, Name = "Row3_Cangallo_Mitre" },
+        { MinZ = 0,    MaxZ = 200,  NorthHW = 22, SouthHW = 14, Y = 7,  Name = "Row4_Mitre_Rivadavia" },
+        { MinZ = 200,  MaxZ = 380,  NorthHW = 14, SouthHW = 14, Y = 5,  Name = "Row5_Rivadavia_Victoria" },
+        { MinZ = 380,  MaxZ = 490,  NorthHW = 14, SouthHW = 18, Y = 2,  Name = "Row6_Victoria_Alsina" },
     }
 
     for cIdx, col in ipairs(colBounds) do
         for rIdx, row in ipairs(rowBounds) do
-            -- Check if this cell is the Plaza Central
             local isPlazaCell = (col.MinX == 0 and col.MaxX == 150 and row.MinZ == -250 and row.MaxZ == 0)
             local blockName = string.format("Manzana_C%d_R%d_%s", cIdx, rIdx, col.Name)
 
-            local paddingX = 18
-            local paddingZ = 18
-            local width = math.abs(col.MaxX - col.MinX) - paddingX * 2
-            local length = math.abs(row.MaxZ - row.MinZ) - paddingZ * 2
-            local centerX = (col.MinX + col.MaxX) * 0.5
-            local centerZ = (row.MinZ + row.MaxZ) * 0.5
+            -- Exact boundary calculation based on adjacent street curb edges:
+            -- Adds 1.0 stud total width/length (0.5 stud overlap into each side curb)
+            -- guaranteeing 100% continuous walkable connection with zero physics seams.
+            local westEdge = col.MinX + col.WestHW
+            local eastEdge = col.MaxX - col.EastHW
+            local northEdge = row.MinZ + row.NorthHW
+            local southEdge = row.MaxZ - row.SouthHW
 
-            if isPlazaCell then
-                -- Plaza Central is constructed exclusively via PlazaCentralLandmarkBuilder within
-                -- the LMK_PLAZA_MONUMENT container to prevent duplicate primitive foundation/fountain geometry.
-            else
-                -- Standard urban block foundation (raised sidewalk with rubble interior)
-                local urbanBlock = EpecuenMapGenerator.CreateBlock(
-                    folderBlocks,
-                    blockName,
-                    CFrame.new(centerX, row.Y, centerZ),
-                    Vector3.new(width, 1.8, length),
-                    Enum.Material.Concrete,
-                    Color3.fromRGB(130, 125, 115) -- Salt-stained cracked concrete
-                )
-                blocksCount += 1
+            local width = (eastEdge - westEdge) + 1.0
+            local length = (southEdge - northEdge) + 1.0
+            local centerX = (westEdge + eastEdge) * 0.5
+            local centerZ = (northEdge + southEdge) * 0.5
 
-                -- Inner foundation rubble slab
+            -- Solid vertical mass from sidewalk height down to terrain (eliminating voids beneath blocks)
+            local targetBottomY = (row.MaxZ >= 460) and -8.0 or -1.0
+            local totalHeight = math.max(2.4, (row.Y + 0.9) - targetBottomY)
+            local centerY = (row.Y + 0.9 + targetBottomY) * 0.5
+
+            local urbanBlock = EpecuenMapGenerator.CreateBlock(
+                folderBlocks,
+                blockName,
+                CFrame.new(centerX, centerY, centerZ),
+                Vector3.new(width, totalHeight, length),
+                Enum.Material.Concrete,
+                Color3.fromRGB(130, 125, 115) -- Salt-stained cracked concrete sidewalk
+            )
+            blocksCount += 1
+
+            if not isPlazaCell then
+                -- Inner foundation rubble slab on top of the block
                 local rubble = Instance.new("Part")
                 rubble.Name = "InnerRubble"
                 rubble.Anchored = true
                 rubble.CanCollide = true
-                rubble.Size = Vector3.new(width - 8, 1.4, length - 8)
-                rubble.CFrame = CFrame.new(centerX, row.Y + 0.6, centerZ)
+                rubble.Size = Vector3.new(width - 6, 1.2, length - 6)
+                rubble.CFrame = CFrame.new(centerX, row.Y + 0.9 + 0.5, centerZ)
                 rubble.Material = Enum.Material.Slate
                 rubble.Color = Color3.fromRGB(110, 105, 95)
                 rubble.Parent = urbanBlock

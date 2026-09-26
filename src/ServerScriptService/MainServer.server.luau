@@ -35,17 +35,18 @@ WaterHazardService.Init()
 InteractionService.Init()
 MonsterAIService.Init()
 
--- Setup baseline bleak Argentine pampas lighting
+-- Setup baseline bleak Argentine pampas lighting (Priority 6)
+-- Retains cold nocturnal dread while illuminating silhouettes, building facades, and roadways
 local function configureEnvironmentLighting()
-    Lighting.ClockTime = 2.5 -- Night, but readable
-    Lighting.Brightness = 2.0
-    Lighting.OutdoorAmbient = Color3.fromRGB(85, 92, 105)
-    Lighting.Ambient = Color3.fromRGB(70, 76, 88)
-    Lighting.FogColor = Color3.fromRGB(55, 62, 72)
-    Lighting.FogStart = 180
-    Lighting.FogEnd = 800
+    Lighting.ClockTime = 2.8 -- Nocturnal starry night with cold lunar radiance
+    Lighting.Brightness = 2.4 -- Balanced level to illuminate surfaces without daytime look
+    Lighting.OutdoorAmbient = Color3.fromRGB(115, 122, 138) -- Cold moonlight fill on ruins and asphalt
+    Lighting.Ambient = Color3.fromRGB(95, 102, 115) -- Prevents harsh pitch-black shadow crush
+    Lighting.FogColor = Color3.fromRGB(50, 58, 68) -- Deep misty salt fog
+    Lighting.FogStart = 160
+    Lighting.FogEnd = 900
     Lighting.GlobalShadows = false
-    Lighting.ExposureCompensation = 0.4
+    Lighting.ExposureCompensation = 0.65 -- Keeps ground and obstacles clearly discernable
 end
 
 configureEnvironmentLighting()

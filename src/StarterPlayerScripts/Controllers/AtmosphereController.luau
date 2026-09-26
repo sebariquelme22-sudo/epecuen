@@ -18,13 +18,13 @@ local depthOfField: DepthOfFieldEffect?
 local windSound: Sound?
 
 function AtmosphereController.Init()
-    -- Color correction: Cold, desaturated, high contrast
+    -- Color correction: Cold, bleak pampas atmosphere with crisp visibility of obstacles and ruins
     colorCorrection = Instance.new("ColorCorrectionEffect")
     colorCorrection.Name = "EpecuenGrade"
-    colorCorrection.Brightness = -0.05
-    colorCorrection.Contrast = 0.22
-    colorCorrection.Saturation = -0.45 -- Desaturated bleak ghost-town feel
-    colorCorrection.TintColor = Color3.fromRGB(225, 235, 245) -- Pale salt-white hue
+    colorCorrection.Brightness = 0.04 -- Gentle lift preventing shadow crush while preserving night
+    colorCorrection.Contrast = 0.12 -- Softened contrast so shadows are readable rather than impenetrable
+    colorCorrection.Saturation = -0.35 -- Desaturated ghost-town feel without losing all color depth
+    colorCorrection.TintColor = Color3.fromRGB(225, 235, 245) -- Pale cold salt-white hue
     colorCorrection.Parent = Lighting
 
     bloom = Instance.new("BloomEffect")
@@ -58,10 +58,10 @@ function AtmosphereController.SetWaterImmersion(inWater: boolean)
     if colorCorrection then
         if inWater then
             colorCorrection.TintColor = Color3.fromRGB(150, 190, 200)
-            colorCorrection.Brightness = -0.2
+            colorCorrection.Brightness = -0.10
         else
             colorCorrection.TintColor = Color3.fromRGB(225, 235, 245)
-            colorCorrection.Brightness = -0.05
+            colorCorrection.Brightness = 0.04
         end
     end
 end
